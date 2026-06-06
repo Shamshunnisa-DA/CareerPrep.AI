@@ -38,3 +38,4 @@ STORAGES = {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
     },
 }
+# //just a checker to see if the code is being updated in the repo
