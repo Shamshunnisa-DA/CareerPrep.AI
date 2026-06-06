@@ -1,0 +1,71 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ title }} | CareerPrep AI</title>
+  <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+</head>
+<body class="auth-body">
+  <main class="auth-shell">
+    <section class="auth-hero" aria-label="CareerPrep AI account">
+      <a class="brand" href="/">
+        <span class="brand-mark">CP</span>
+        <span>
+          <strong>CareerPrep AI</strong>
+          <small>Your saved career prep workspace</small>
+        </span>
+      </a>
+      <div class="auth-copy">
+        <p class="eyebrow">Personal progress vault</p>
+        <h1>Keep every resume scan, interview score, and study plan in one place.</h1>
+        <p>Sign in once, then build a timeline of your job readiness as you practice.</p>
+      </div>
+      <div class="auth-stats" aria-label="Saved workspace features">
+        <article>
+          <strong>ATS</strong>
+          <span>Track resume gaps by role</span>
+        </article>
+        <article>
+          <strong>Interview</strong>
+          <span>Review previous scores</span>
+        </article>
+        <article>
+          <strong>Roadmap</strong>
+          <span>Revisit generated plans</span>
+        </article>
+      </div>
+    </section>
+
+    <section class="auth-card" aria-label="{{ title }}">
+      <div class="auth-card-head">
+        <p class="eyebrow">{% if mode == 'login' %}Welcome back{% else %}Start tracking{% endif %}</p>
+        <h2>{{ title }}</h2>
+      </div>
+      <form method="post" novalidate>
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+          <div class="error-box">{{ form.non_field_errors }}</div>
+        {% endif %}
+        {% for field in form %}
+          <label for="{{ field.id_for_label }}">
+            {{ field.label }}
+            {{ field }}
+            {% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}
+            {% for error in field.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+          </label>
+        {% endfor %}
+        <button class="primary auth-submit" type="submit">{{ button_text }}</button>
+      </form>
+      <p class="auth-switch">
+        {% if mode == 'login' %}
+          New here? <a href="{% url 'register' %}">Create an account</a>
+        {% else %}
+          Already have an account? <a href="{% url 'login' %}">Login</a>
+        {% endif %}
+      </p>
+    </section>
+  </main>
+</body>
+</html>

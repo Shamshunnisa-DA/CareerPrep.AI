@@ -1,0 +1,244 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI Career Prep Platform</title>
+  <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <a class="brand" href="/">
+        <span class="brand-mark">CP</span>
+        <span>
+          <strong>CareerPrep AI</strong>
+          <small>Interview, resume, roadmap</small>
+        </span>
+      </a>
+      <div class="top-actions" aria-label="Project status">
+        <button class="ghost-button" id="themeToggle" type="button">Dark mode</button>
+        <span class="status-pill">Hi, {{ request.user.username }}</span>
+        <a class="ghost-link" href="{% url 'logout' %}">Logout</a>
+        <span class="status-pill">Django</span>
+        <span class="status-pill accent">AI Ready</span>
+      </div>
+    </header>
+
+    <section class="workspace">
+      <aside class="sidebar" aria-label="Workspace navigation">
+        <div class="intro">
+          <p class="eyebrow">AI Career Prep</p>
+          <h1>Job readiness cockpit</h1>
+          <p>Analyze your resume, practice realistic interviews, and turn weak areas into a focused study plan.</p>
+        </div>
+        <nav class="tabs" aria-label="Modules">
+          <button class="tab active" data-tab="ats" type="button">
+            <span>01</span>
+            <strong>ATS Analyzer</strong>
+          </button>
+          <button class="tab" data-tab="interview" type="button">
+            <span>02</span>
+            <strong>Mock Interview</strong>
+          </button>
+          <button class="tab" data-tab="plan" type="button">
+            <span>03</span>
+            <strong>Study Plan</strong>
+          </button>
+        </nav>
+        <div class="metric-row">
+          <div class="score-tile">
+            <span id="atsScore">--</span>
+            <small>ATS score</small>
+          </div>
+          <div class="score-tile">
+            <span id="interviewScore">--</span>
+            <small>Interview</small>
+          </div>
+        </div>
+        <div class="history-summary" aria-label="Saved report totals">
+          <p class="eyebrow">Saved work</p>
+          <div>
+            <strong>{{ recent_ats|length }}</strong><span>ATS</span>
+            <strong>{{ recent_interviews|length }}</strong><span>Interviews</span>
+            <strong>{{ recent_plans|length }}</strong><span>Plans</span>
+          </div>
+        </div>
+        <div class="prep-progress" aria-label="Preparation progress">
+          <div class="progress-head">
+            <strong>Prep flow</strong>
+            <span id="progressLabel">0%</span>
+          </div>
+          <div class="progress-track"><span id="progressBar"></span></div>
+          <ol>
+            <li id="stepAts">Resume analyzed</li>
+            <li id="stepInterview">Interview scored</li>
+            <li id="stepPlan">Plan generated</li>
+          </ol>
+        </div>
+      </aside>
+
+      <div class="content">
+        <section class="overview" aria-label="Career preparation overview">
+          <article>
+            <span>Resume</span>
+            <strong>ATS keyword matching</strong>
+            <small>Find missing skills before applying.</small>
+          </article>
+          <article>
+            <span>Interview</span>
+            <strong>Role-based practice</strong>
+            <small>Generate questions and score answers.</small>
+          </article>
+          <article>
+            <span>Roadmap</span>
+            <strong>Daily study plan</strong>
+            <small>Turn weak topics into a schedule.</small>
+          </article>
+        </section>
+
+        <section class="role-strip" aria-label="Quick role selection">
+          <span>Quick role</span>
+          <button class="role-chip active" data-role="python" type="button">Python</button>
+          <button class="role-chip" data-role="java" type="button">Java</button>
+          <button class="role-chip" data-role="frontend" type="button">Frontend</button>
+          <button class="role-chip" data-role="fullstack" type="button">Full Stack</button>
+          <button class="role-chip" data-role="data analyst" type="button">Data Analyst</button>
+        </section>
+
+        <section class="history-panel" aria-label="Previous analysis history">
+          <div class="history-head">
+            <div>
+              <p class="eyebrow">Previous analysis</p>
+              <h2>Your saved timeline</h2>
+            </div>
+            <button class="ghost-button" id="refreshHistory" type="button">Refresh</button>
+          </div>
+          <div class="history-grid">
+            <article>
+              <h3>Resume scans</h3>
+              <div id="atsHistory" class="history-list">
+                {% for item in recent_ats %}
+                  <button class="history-item" data-history-type="ats" data-history-id="{{ item.id }}" type="button">
+                    <strong>{{ item.target_role }}</strong>
+                    <span>{{ item.score }} score</span>
+                  </button>
+                {% empty %}
+                  <p>No saved resume scans yet.</p>
+                {% endfor %}
+              </div>
+            </article>
+            <article>
+              <h3>Interviews</h3>
+              <div id="interviewHistory" class="history-list">
+                {% for item in recent_interviews %}
+                  <button class="history-item" data-history-type="interview" data-history-id="{{ item.id }}" type="button">
+                    <strong>{{ item.role }}</strong>
+                    <span>{{ item.score }} score</span>
+                  </button>
+                {% empty %}
+                  <p>No saved interviews yet.</p>
+                {% endfor %}
+              </div>
+            </article>
+            <article>
+              <h3>Study plans</h3>
+              <div id="planHistory" class="history-list">
+                {% for item in recent_plans %}
+                  <button class="history-item" data-history-type="plan" data-history-id="{{ item.id }}" type="button">
+                    <strong>{{ item.target_role }}</strong>
+                    <span>{{ item.plan.days|length }} days</span>
+                  </button>
+                {% empty %}
+                  <p>No saved study plans yet.</p>
+                {% endfor %}
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section class="panel active" id="ats">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Resume Analyzer</p>
+              <h2>Match resume to a job description</h2>
+            </div>
+            <button class="primary" id="runAts" type="button">Analyze Resume</button>
+          </div>
+          <div class="form-grid">
+            <label>Target role <input id="targetRole" value="python" placeholder="python, java, frontend"></label>
+            <label>Candidate name <input id="candidateName" placeholder="Optional"></label>
+          </div>
+          <label class="upload-box" for="resumeFile">
+            <input id="resumeFile" type="file" accept=".txt,.pdf,.doc,.docx">
+            <span>
+              <strong>Upload resume file</strong>
+              <small id="fileName">Optional. Pasted text gives the most accurate local analysis.</small>
+            </span>
+          </label>
+          <div class="split-grid">
+            <label>Resume text <textarea id="resumeText" placeholder="Paste resume text here"></textarea></label>
+            <label>Job description <textarea id="jobDescription" placeholder="Paste job description here"></textarea></label>
+          </div>
+          <div class="result-panel" id="atsOutput">ATS results will appear here.</div>
+        </section>
+
+        <section class="panel" id="interview">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Mock Interview</p>
+              <h2>Practice text or video interview answers</h2>
+            </div>
+            <button class="primary" id="startInterview" type="button">Start Interview</button>
+          </div>
+          <div class="form-grid three">
+            <label>Role <input id="interviewRole" value="python"></label>
+            <label>Difficulty
+              <select id="difficulty">
+                <option>easy</option>
+                <option selected>medium</option>
+                <option>hard</option>
+              </select>
+            </label>
+            <label>Questions <input id="questionCount" type="number" min="1" max="10" value="5"></label>
+          </div>
+          <div class="video-studio">
+            <div class="video-frame">
+              <video id="videoPreview" autoplay muted playsinline></video>
+              <span id="videoStatus">Camera off</span>
+            </div>
+            <div class="video-actions">
+              <button class="ghost-button" id="enableCamera" type="button">Enable Camera</button>
+              <button class="ghost-button" id="recordVideo" type="button" disabled>Start Recording</button>
+              <a class="download-link" id="downloadRecording" hidden>Download Recording</a>
+            </div>
+          </div>
+          <div id="questions" class="question-list"></div>
+          <button class="secondary" id="submitInterview" type="button">Submit Answers</button>
+          <div class="result-panel" id="interviewOutput">Interview questions will appear here.</div>
+        </section>
+
+        <section class="panel" id="plan">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Study Plan</p>
+              <h2>Build a daily roadmap from your gaps</h2>
+            </div>
+            <div class="button-row">
+              <button class="ghost-button" id="copyPlan" type="button">Copy Plan</button>
+              <button class="primary" id="generatePlan" type="button">Generate Plan</button>
+            </div>
+          </div>
+          <div class="form-grid">
+            <label>Role <input id="planRole" value="python"></label>
+            <label>Days <input id="planDays" type="number" min="3" max="14" value="7"></label>
+          </div>
+          <div class="result-panel" id="planOutput">Your study plan will appear here.</div>
+        </section>
+      </div>
+    </section>
+  </main>
+  <script src="{% static 'js/dashboard.js' %}"></script>
+</body>
+</html>
